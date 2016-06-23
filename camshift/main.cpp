@@ -57,8 +57,9 @@ static void refineSegments(Mat& img, Mat& mask, Mat& dst)
 
     }
     camshifttracker ctracker;
-    ctracker.setMainImage(img);
+   
     ctracker.setCurrentRect(boundingRect(contours[largest_area_index]));
+    cout << boundingRect(contours[largest_area_index]).width<<endl;
     camtracker.push_back(ctracker);
      boundRect=boundingRect(contours[largest_area_index]);
 //     Scalar color = Scalar(255,255,255);
@@ -136,10 +137,10 @@ int main(){
     }
            detecter * dt = new detecter;
     bool stop =false;
-      Mat kframe,bgmask,back_frame,tmp_frame;
+      Mat kframe,bgmask,back_frame,tmp_frame,s_frame;
     while(!stop){
-        cap >> tmp_frame;
-        cvtColor(tmp_frame,tmp_frame,COLOR_BGR2GRAY);
+        cap >> s_frame;
+        cvtColor(s_frame,tmp_frame,COLOR_BGR2GRAY);
          blur(tmp_frame,kframe,Size(3,3),Point(-1,-1));
 
             dt->bgsubtractor->apply(kframe, bgmask, (true) ? -1 : 0);
@@ -149,7 +150,9 @@ int main(){
 //            cout <<camtracker.size()<<endl;
             for(int i=0; i<camtracker.size(); i++)
             {
-                cout<<"x:"<<camtracker[i].trackCurrentRect().boundingRect().area()
+                camtracker[i].setMainImage(s_frame);
+                cout <<"rect:"<<camtracker[i].getCurrentRect().width<<endl;
+                cout<<"area:"<<camtracker[i].trackCurrentRect().boundingRect().area()
                    <<endl;
                 if(camtracker[i].trackCurrentRect().boundingRect().area() <= 1)
                     continue;

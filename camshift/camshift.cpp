@@ -49,7 +49,7 @@ cv::RotatedRect camshifttracker::trackCurrentRect()
 
     cv::Mat image;
     mainImage.copyTo(image);
-    cv::cvtColor(image, image, CV_GRAY2BGR);
+
     cv::cvtColor(image, hsv, CV_BGR2HSV);
 
     cv::inRange(hsv, cv::Scalar(0, SMin, MIN(VMin,VMax)),
@@ -101,6 +101,6 @@ cv::RotatedRect camshifttracker::trackCurrentRect()
 
     //        if( backprojMode )
     //            cv::cvtColor( backproj, image, CV_GRAY2BGR );
-
+    std::cout << trackBox.boundingRect().width<<std::endl;
     return trackBox;
 }

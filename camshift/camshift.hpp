@@ -2,7 +2,7 @@
 #define CAMSHIFT_H
 //
 
-
+#include <iostream>
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -37,7 +37,7 @@ private:
     cv::Rect trackWindow;
     int hsize;
 
-    cv::Mat hsv, hue, mask, hist, backproj; //, histimg;
+    cv::Mat hsv, hue, mask, hist, histimg,backproj; //, histimg;
 
     cv::Point origin;
     cv::Rect selection;
