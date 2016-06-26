@@ -10,7 +10,6 @@
 #ifndef DETECT_H
 #define DETECT_H
 #include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/videoio/videoio.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -23,11 +22,8 @@ using namespace cv;
 class detecter{
 public :
     detecter();
-    void findarea(cv::Mat & a);
+    vector<Rect> findarea(cv::Mat & a);
     Ptr<BackgroundSubtractorMOG2> bgsubtractor;
-    vector<Rect> get_area();
-private:
-    vector<Rect> detected_area;
 };
 
 #endif /* detect_hpp */

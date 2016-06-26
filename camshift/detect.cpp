@@ -15,10 +15,26 @@ detecter::detecter(){
     bgsubtractor->setShadowValue(0);
 }
 
-void detecter::findarea(cv::Mat & a){
-
+vector<Rect> detecter::findarea(cv::Mat & a){
+    vector<Rect> result;
+    int niters = 3;
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    Mat temp;
+    Mat element;
+    
+    element = getStructuringElement(MORPH_RECT, Size(9, 9), Point(-1, -1));
+    dilate(a, temp, element, Point(4,4), niters);
+    erode(temp, temp, element, Point(4,4), niters*2);
+    dilate(temp, temp, element, Point(4,4), niters*3);
+    threshold(temp, temp, 128, 255, CV_THRESH_BINARY);
+    findContours( temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
+    for(int i= 0;i<contours.size();i++){
+        double a = contourArea(contours[i]);
+        if(a<9){
+            break;
+        }
+        result.push_back(boundingRect(contours[i]));
+    }
+    return result;
 }
-vector<Rect> detecter::get_area(){
-    return detected_area;
-}
-

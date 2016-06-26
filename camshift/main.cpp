@@ -156,7 +156,6 @@ int main(){
                    <<endl;
                 if(camtracker[i].trackCurrentRect().boundingRect().area() <= 1)
                     continue;
-               ellipse(tmp_frame, camtracker[i].trackCurrentRect(), cv::Scalar(255, 255, 255));
                rectangle(tmp_frame, camtracker[i].trackCurrentRect().boundingRect(), cv::Scalar(255, 255, 255));
             }
   //
