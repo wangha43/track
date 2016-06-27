@@ -25,53 +25,10 @@ vector<KeyPoint> keyPoint_1;
 Rect boundRect;
 Mat mat_of_first;
 vector<int> count_time;
-void vesusmatch(Mat mat1,vector<Rect> & vec1,Mat mat2,vector<Rect> & vec2, recognizer * rec){
-        if(vec1.size()!=0 && vec2.size()!= 0){
-            vector<Rect> vect1(vec1);
-            vector<Rect> vect2(vec2);
-        for(vector<Rect>::iterator iter1 = vect1.begin(); iter1!=vect1.end();){
-            bool matched = false;
-            size_t k = distance(vect1.begin(),iter1);
-            for(vector<Rect>::iterator iter2 = vect2.begin();iter2!=vect2.end();){
-                 bool match = rec->getmatched(Mat(mat1,*iter1),Mat(mat2,*iter2));
-                 if(match){
-                       count_time[k] = 0;
-                       vect2.erase(iter2);
-                       matched = true;
-                       break;
-                 }else{
-                    iter2++;
-                 }
-            }
-            if(!matched){
-                count_time[k]++;
-                if(count_time[k]>10){
-                    //erase disappear 10 time object and statistics
-                    vect1.erase(iter1);
-                    vec1.erase(iter1);
-                    count_time.erase(count_time.begin()+k);
-                    //make it run truely for every vector
-                    iter1--;
-                }
-            }
-            cout << matched <<endl;
-            iter1++;
-        }
-        if(vec2.size()>0){
-            vec1.insert(vec1.end(),vect2.begin(),vect2.end());
-            vector<int> cc(vect2.size(),0);
-            count_time.insert(count_time.end(),cc.begin(),cc.end());
-        }
-     }
-        if(vec1.size()==0 && vec2.size()!= 0){
-            vec1 = vec2;
-            vector<int> cc(vec2.size(),0);
-            count_time = cc;
-        }
-}
+
 detecter * dt = new detecter;
 recognizer * recogn = new recognizer;
-
+camshifttracker ctracker;
 vector<Rect> trackedRect;
 vector<Rect> foundRect;
 int main(){
@@ -101,21 +58,21 @@ int main(){
                 if(trackedRect.size()>0){
                     size_t siz = trackedRect.size();
                     vector<int> k(siz,0);
-                    count_time = k;
+                    count_time.insert(count_time.end(),k.begin(),k.end());
                 }
             }else{
                 foundRect = dt->findarea(bgmask);
             }
 
               if(!firsttrack){
-                   vesusmatch(mat_of_first,trackedRect,tmp_frame,foundRect,recogn);
+                 recogn->vesusmatch(mat_of_first,trackedRect,tmp_frame,foundRect,count_time);
               }
-              mat_of_first =tmp_frame;
+              mat_of_first = tmp_frame;
               firsttrack = false;
         
               for(size_t i = 0;i<trackedRect.size();i++){
 //                    cout<<trackedRect.size()<<endl;
-                  camshifttracker ctracker;
+                  
                    ctracker.setMainImage(s_frame);
                     ctracker.setCurrentRect(trackedRect[i]);
                     if(ctracker.trackCurrentRect().boundingRect().area() <=1)
@@ -129,7 +86,7 @@ int main(){
             imshow("video", s_frame);
             imshow("foreground", bgmask);
             imshow("background",back_frame);
-            cvWaitKey(1);
+            waitKey(200);
     }
     delete dt;
     delete recogn;
