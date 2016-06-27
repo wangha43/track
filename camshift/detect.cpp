@@ -15,6 +15,10 @@ detecter::detecter(){
     bgsubtractor->setShadowValue(0);
 }
 
+//Ptr<BackgroundSubtractorMOG2> getSubstractor(){
+//    return bgsubtractor;
+//}
+
 vector<Rect> detecter::findarea(cv::Mat & a){
     vector<Rect> result;
     int niters = 3;
@@ -28,8 +32,9 @@ vector<Rect> detecter::findarea(cv::Mat & a){
     erode(temp, temp, element, Point(4,4), niters*2);
     dilate(temp, temp, element, Point(4,4), niters*3);
     threshold(temp, temp, 128, 255, CV_THRESH_BINARY);
+    imshow("temp",temp);
     findContours( temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
-    for(int i= 0;i<contours.size();i++){
+    for(size_t i= 0;i<contours.size();i++){
         double a = contourArea(contours[i]);
         if(a<9){
             break;

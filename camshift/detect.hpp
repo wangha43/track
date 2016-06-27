@@ -23,6 +23,7 @@ class detecter{
 public :
     detecter();
     vector<Rect> findarea(cv::Mat & a);
+//    Ptr<BackgroundSubtractorMOG2> getSubstractor();
     Ptr<BackgroundSubtractorMOG2> bgsubtractor;
 };
 

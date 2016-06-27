@@ -10,8 +10,10 @@
 #include "opencv2/core/cuda.hpp"
 #include "opencv2/xfeatures2d/nonfree.hpp"
 #include "opencv2/video/tracking.hpp"
+
 #include "camshift.hpp"
 #include "detect.hpp"
+#include "recognize.hpp"
 
 using namespace std;
 using namespace cv;
@@ -20,113 +22,56 @@ vector<camshifttracker> camtracker;
 vector<KeyPoint> keyPoint_1;
  bool tracker_sys=false;
  bool moving = false;
- Rect boundRect;
-static void refineSegments(Mat& img, Mat& mask, Mat& dst)
-{
-    int niters = 3;
-    vector<vector<Point> > contours;
-    vector<Vec4i> hierarchy;
-    Mat temp;
-    Mat element;
-
-     //9*9 area
-    element = getStructuringElement(MORPH_RECT, Size(9, 9), Point(-1, -1));
-    dilate(mask, temp, element, Point(4,4), niters);
-    erode(temp, temp, element, Point(4,4), niters*2);
-    dilate(temp, temp, element, Point(4,4), niters*3);
-    threshold(temp, temp, 128, 255, CV_THRESH_BINARY);
-    //turn into binary image
-    findContours( temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
-   // dst = Mat::zeros(img.size(), CV_8UC3);
-    if( contours.size() == 0){
-        moving = false;
-        tracker_sys = false;
-        return;
-}
-    tracker_sys = true;
-    vector<vector<Point> > contours_poly(contours.size());
-    vector<Rect_<int> >  faceshoulders;
-    int largest_area = 0;
-    int largest_area_index=0;
-    for(int i= 0;i<contours.size();i++){
-         double a = contourArea(contours[i]);
-        if(a>largest_area){
-            largest_area=a;
-            largest_area_index = i;
+Rect boundRect;
+Mat mat_of_first;
+vector<int> count_time;
+void vesusmatch(Mat mat1,vector<Rect> & vec1,Mat mat2,vector<Rect> & vec2, recognizer * rec){
+        if(vec1.size()!=0 && vec2.size()!= 0){
+            vector<Rect> vect1(vec1);
+            vector<Rect> vect2(vec2);
+        for(vector<Rect>::iterator iter1 = vect1.begin(); iter1!=vect1.end();){
+            bool matched = false;
+            int k = distance(vect1.begin(),iter1);
+            for(vector<Rect>::iterator iter2 = vect2.begin();iter2!=vect2.end();){
+                 bool match = rec->getmatched(Mat(mat1,*iter1),Mat(mat2,*iter2));
+                 if(match){
+                       count_time[k] = 0;
+                       vect2.erase(iter2);
+                       matched = true;
+                       break;
+                 }else{
+                    iter2++;
+                 }
+            }
+            if(!matched){
+                count_time[k]++;
+                if(count_time[k]>10){
+                    //erase disappear 10 time object and statistics
+                    vect1.erase(iter1);
+                    vec1.erase(iter1);
+                    count_time.erase(count_time.begin()+k);
+                    //make it run truely for every vector
+                    iter1--;
+                }
+            }
+            cout << matched <<endl;
+            iter1++;
         }
-
-    }
-    camshifttracker ctracker;
-   
-    ctracker.setCurrentRect(boundingRect(contours[largest_area_index]));
-    cout << boundingRect(contours[largest_area_index]).width<<endl;
-    camtracker.push_back(ctracker);
-     boundRect=boundingRect(contours[largest_area_index]);
-//     Scalar color = Scalar(255,255,255);
-     Mat tmp_rect = img(Rect(boundRect.x,boundRect.y,boundRect.width,boundRect.height)).clone();
-  Ptr<SURF> detector = SURF::create(400);
-     detector->detect(tmp_rect,keyPoint_1);
-
-     if(keyPoint_1.size()!=0){
-         Mat draw ;
-         drawKeypoints( tmp_rect, keyPoint_1, draw, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
-         imshow("draw",draw);
+        if(vec2.size()>0){
+            vec1.insert(vec1.end(),vect2.begin(),vect2.end());
+            vector<int> cc(vect2.size(),0);
+            count_time.insert(count_time.end(),cc.begin(),cc.end());
+        }
      }
+        if(vec1.size()==0 && vec2.size()!= 0){
+            vec1 = vec2;
+            vector<int> cc(vec2.size(),0);
+            count_time = cc;
+        }
 }
 
-//static void track(Rect & boundRect,Mat & img){
-//    if(tracker_sys){
-//       Mat hsv,mask,hue,hist,histimg,backproj;
-//       int hsize = 16;
-//       Rect trackwindow;
-//       float hranges[] = {0,180};//hranges在后面的计算直方图函数中要用到
-//       const float* phranges = hranges;
-//       cvtColor(img,hsv,CV_GRAY2BGR);
-//       cvtColor(hsv,hsv,CV_BGR2HSV);
-//       int vmin = 10, vmax = 256, smin = 30;
-//       int _vmin = vmin, _vmax = vmax;
-//       inRange(hsv, Scalar(0, smin, MIN(_vmin,_vmax)),Scalar(180, 256, MAX(_vmin, _vmax)), mask);
-//       hue.create(hsv.size(),hsv.depth());
-//       int ch[] = {0,0};
-//       mixChannels(&hsv,1,&hue,1,ch,1);
-//       Mat roi(hue,boundRect),maskroi(mask,boundRect);
-//       calcHist(&roi, 1, 0, maskroi, hist, 1, &hsize, &phranges);
-//       normalize(hist, hist, 0, 255, CV_MINMAX);
-//       trackwindow = boundRect;
-
-//         histimg = Scalar::all(0);
-//         int binW = histimg.cols / hsize;
-//         Mat buf(1, hsize, CV_8UC3);
-//          for( int i = 0; i < hsize; i++ )
-//               buf.at<Vec3b>(i) = Vec3b(saturate_cast<uchar>(i*180./hsize), 255, 255);
-//         cvtColor(buf, buf, CV_HSV2BGR);
-//       histimg = Scalar::all(0);
-//       int binW = histimg.cols / hsize;
-//       Mat buf(1, hsize, CV_8UC3);
-//       for( int i = 0; i < hsize; i++ )
-//           buf.at<Vec3b>(i) = Vec3b(saturate_cast<uchar>(i*180./hsize), 255, 255);
-//       cvtColor(buf, buf, COLOR_HSV2BGR);
-
-//       for( int i = 0; i < hsize; i++ )
-//       {
-//           int val = saturate_cast<int>(hist.at<float>(i)*histimg.rows/255);
-//           rectangle( histimg, Point(i*binW,histimg.rows),
-//           Point((i+1)*binW,histimg.rows - val),
-//           Scalar(buf.at<Vec3b>(i)), -1, 8 );
-//       }
-//        calcBackProject(&hue, 1, 0, hist, backproj, &phranges);
-//        backproj &= mask;
-//        RotatedRect trackBox = CamShift(backproj, trackwindow,
-//                                cv::TermCriteria( CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1 ));
-//        cout <<"tracking"<<endl;
-//        Rect rRect = trackBox.boundingRect();
-//        rectangle(img,rRect,Scalar(255,255,255));
-//        Mat rr = img(Rect(rRect.x,rRect.y,rRect.width,rRect.height)).clone();
-//        cout <<rRect.x<<"-> x"<<endl<<rRect.width<<"->y"<<endl;
-//        imshow ("RRRR",rr);
-//    }
-//}
-
+vector<Rect> trackedRect;
+vector<Rect> foundRect;
 int main(){
     VideoCapture cap;
     cap.open(0);
@@ -135,37 +80,56 @@ int main(){
         cout << "***Could not initialize capturing...***\n";
         return -1;
     }
-           detecter * dt = new detecter;
+    detecter * dt = new detecter;
+    recognizer * recogn = new recognizer;
+    recogn->setThrehold(5);
+    camshifttracker ctracker;
     bool stop =false;
-      Mat kframe,bgmask,back_frame,tmp_frame,s_frame;
+    bool firsttrack = true;
+    Mat kframe,bgmask,back_frame,tmp_frame,s_frame;
     while(!stop){
         cap >> s_frame;
-        cvtColor(s_frame,tmp_frame,COLOR_BGR2GRAY);
-         blur(tmp_frame,kframe,Size(3,3),Point(-1,-1));
+            cvtColor(s_frame,tmp_frame,COLOR_BGR2GRAY);
+            blur(tmp_frame,kframe,Size(3,3),Point(-1,-1));
+            Ptr<BackgroundSubtractorMOG2> bgsubtractor = dt->bgsubtractor;
+            bgsubtractor->apply(kframe, bgmask, (true) ? -1 : 0);
+            bgsubtractor->getBackgroundImage(back_frame);
 
-            dt->bgsubtractor->apply(kframe, bgmask, (true) ? -1 : 0);
-            dt->bgsubtractor->getBackgroundImage(back_frame);
-
-            refineSegments(tmp_frame, bgmask, kframe);
-//            cout <<camtracker.size()<<endl;
-            for(int i=0; i<camtracker.size(); i++)
-            {
-                camtracker[i].setMainImage(s_frame);
-                cout <<"rect:"<<camtracker[i].getCurrentRect().width<<endl;
-                cout<<"area:"<<camtracker[i].trackCurrentRect().boundingRect().area()
-                   <<endl;
-                if(camtracker[i].trackCurrentRect().boundingRect().area() <= 1)
-                    continue;
-               rectangle(tmp_frame, camtracker[i].trackCurrentRect().boundingRect(), cv::Scalar(255, 255, 255));
+            //init the tracked Rect
+            if(firsttrack){
+                trackedRect = dt->findarea(bgmask);
+                if(trackedRect.size()>0){
+                    int siz = trackedRect.size();
+                    vector<int> k(siz,0);
+                    count_time = k;
+                }
+            }else{
+                foundRect = dt->findarea(bgmask);
             }
-  //
+
+              if(!firsttrack){
+                   vesusmatch(mat_of_first,trackedRect,tmp_frame,foundRect,recogn);
+              }
+              mat_of_first =tmp_frame;
+              firsttrack = false;
+              ctracker.setMainImage(s_frame);
+              for(size_t i = 0;i<trackedRect.size();i++){
+//                    cout<<trackedRect.size()<<endl;
+                    ctracker.setCurrentRect(trackedRect[i]);
+                    if(ctracker.trackCurrentRect().boundingRect().area() <=1)
+                        continue;
+                    rectangle(s_frame,ctracker.trackCurrentRect().boundingRect(),cv::Scalar(255, 255, 255));
+              }
+
+              //
 //                if(tracker_sys == true){
 
-            imshow("video", tmp_frame);
+            imshow("video", s_frame);
             imshow("foreground", bgmask);
             imshow("background",back_frame);
             cvWaitKey(1);
     }
-
+    delete [] dt;
+    delete [] recogn;
     return 0;
 }
