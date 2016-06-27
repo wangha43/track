@@ -37,6 +37,8 @@ bool recognizer::getmatched( Mat  mat1, Mat  mat2){
 }
 
 void recognizer::vesusmatch(Mat & mat1,vector<Rect> & vec1,Mat & mat2,vector<Rect> & vec2,vector<int> & count_time){
+    cout <<"vec1:"<<vec1.size()<<endl;
+    cout <<"vec2:"<<vec2.size()<<endl;
     vector<Rect> vect1(vec1);
     vector<Rect> vect2(vec2);
     if(vect1.size()!=0 && vect2.size()!= 0){
@@ -80,4 +82,5 @@ void recognizer::vesusmatch(Mat & mat1,vector<Rect> & vec1,Mat & mat2,vector<Rec
         vector<int> cc(vect2.size(),0);
         count_time.insert(count_time.end(),cc.begin(),cc.end());;
     }
+
 }

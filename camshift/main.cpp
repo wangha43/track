@@ -28,7 +28,7 @@ vector<int> count_time;
 
 detecter * dt = new detecter;
 recognizer * recogn = new recognizer;
-camshifttracker ctracker;
+
 vector<Rect> trackedRect;
 vector<Rect> foundRect;
 int main(){
@@ -69,17 +69,20 @@ int main(){
               }
               mat_of_first = tmp_frame;
               firsttrack = false;
-        
+              camshifttracker::setMainImage(s_frame);
               for(size_t i = 0;i<trackedRect.size();i++){
-//                    cout<<trackedRect.size()<<endl;
-                  
-                   ctracker.setMainImage(s_frame);
+//                  cout<<trackedRect.size()<<endl;
+                    camshifttracker ctracker;
                     ctracker.setCurrentRect(trackedRect[i]);
-                    if(ctracker.trackCurrentRect().boundingRect().area() <=1)
-                        continue;
-                    rectangle(s_frame,ctracker.trackCurrentRect().boundingRect(),cv::Scalar(255, 255, 255));
+                  camtracker.push_back(ctracker);
+//
               }
-
+        for (size_t i=0; i<camtracker.size(); i++) {
+            if(camtracker[i].trackCurrentRect().boundingRect().area() <=1)
+                    continue;
+rectangle(s_frame,camtracker[i].trackCurrentRect().boundingRect(),cv::Scalar(255, 255, 255));
+        }
+        camtracker.clear();
               //
 //                if(tracker_sys == true){
 
