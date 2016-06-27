@@ -24,7 +24,7 @@ class recognizer{
 public :
     recognizer();
     //查看两个图片匹配不
-    bool getmatched( Mat  mat1, Mat  mat2);
+    bool getmatched( Mat mat1, Mat  mat2);
     //设置匹配点阈值 小于匹配点数量则认为不匹配
     void setThrehold(int a);
 private:

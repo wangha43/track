@@ -31,7 +31,7 @@ void vesusmatch(Mat mat1,vector<Rect> & vec1,Mat mat2,vector<Rect> & vec2, recog
             vector<Rect> vect2(vec2);
         for(vector<Rect>::iterator iter1 = vect1.begin(); iter1!=vect1.end();){
             bool matched = false;
-            int k = distance(vect1.begin(),iter1);
+            size_t k = distance(vect1.begin(),iter1);
             for(vector<Rect>::iterator iter2 = vect2.begin();iter2!=vect2.end();){
                  bool match = rec->getmatched(Mat(mat1,*iter1),Mat(mat2,*iter2));
                  if(match){
@@ -69,6 +69,8 @@ void vesusmatch(Mat mat1,vector<Rect> & vec1,Mat mat2,vector<Rect> & vec2, recog
             count_time = cc;
         }
 }
+detecter * dt = new detecter;
+recognizer * recogn = new recognizer;
 
 vector<Rect> trackedRect;
 vector<Rect> foundRect;
@@ -80,10 +82,8 @@ int main(){
         cout << "***Could not initialize capturing...***\n";
         return -1;
     }
-    detecter * dt = new detecter;
-    recognizer * recogn = new recognizer;
     recogn->setThrehold(5);
-    camshifttracker ctracker;
+    
     bool stop =false;
     bool firsttrack = true;
     Mat kframe,bgmask,back_frame,tmp_frame,s_frame;
@@ -99,7 +99,7 @@ int main(){
             if(firsttrack){
                 trackedRect = dt->findarea(bgmask);
                 if(trackedRect.size()>0){
-                    int siz = trackedRect.size();
+                    size_t siz = trackedRect.size();
                     vector<int> k(siz,0);
                     count_time = k;
                 }
@@ -112,9 +112,11 @@ int main(){
               }
               mat_of_first =tmp_frame;
               firsttrack = false;
-              ctracker.setMainImage(s_frame);
+        
               for(size_t i = 0;i<trackedRect.size();i++){
 //                    cout<<trackedRect.size()<<endl;
+                  camshifttracker ctracker;
+                   ctracker.setMainImage(s_frame);
                     ctracker.setCurrentRect(trackedRect[i]);
                     if(ctracker.trackCurrentRect().boundingRect().area() <=1)
                         continue;
@@ -129,7 +131,7 @@ int main(){
             imshow("background",back_frame);
             cvWaitKey(1);
     }
-    delete [] dt;
-    delete [] recogn;
+    delete dt;
+    delete recogn;
     return 0;
 }
