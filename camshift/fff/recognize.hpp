@@ -24,14 +24,14 @@ class recognizer{
 public :
     recognizer();
     //查看两个图片匹配不
-    bool getmatched( Mat mat1, Mat  mat2);
+    bool getmatched( Rect mat1, Rect  mat2);
     //设置匹配点阈值 小于匹配点数量则认为不匹配
     void setThrehold(int a);
     void vesusmatch(Mat & mat1,vector<Rect> & vec1,Mat & mat2,vector<Rect> & vec2, vector<int> & count_time);
 private:
     Ptr<SURF> extractor;
     Ptr<FeatureDetector> detector;
-    size_t threholdNum;
+    double threholdNum;
 };
 
 #endif /* recognize_hpp */
