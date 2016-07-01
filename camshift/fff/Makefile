@@ -33,7 +33,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = fff1.0.0
-DISTDIR = /home/wxc/fff/.tmp/fff1.0.0
+DISTDIR = /home/wxc/mycpp/camshift/camshift/fff/.tmp/fff1.0.0
 LINK          = g++
 LFLAGS        = -m64
 LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -lavformat-ffmpeg -lavcodec-ffmpeg -lavfilter-ffmpeg -lavutil-ffmpeg -L/usr/local/lib -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_cvv -lopencv_dnn -lopencv_dpm -lopencv_fuzzy -lopencv_line_descriptor -lopencv_optflow -lopencv_plot -lopencv_reg -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_rgbd -lopencv_surface_matching -lopencv_tracking -lopencv_datasets -lopencv_text -lopencv_face -lopencv_xfeatures2d -lopencv_shape -lopencv_video -lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_flann -lopencv_xobjdetect -lopencv_objdetect -lopencv_ml -lopencv_xphoto -lippicv -lopencv_highgui -lopencv_videoio -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
@@ -51,11 +51,13 @@ OBJECTS_DIR   = ./
 SOURCES       = main.cpp \
 		detect.cpp \
 		camshift.cpp \
-		recognize.cpp 
+		recognize.cpp \
+		tldtracker.cpp 
 OBJECTS       = main.o \
 		detect.o \
 		camshift.o \
-		recognize.o
+		recognize.o \
+		tldtracker.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -117,10 +119,12 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		fff.pro detect.hpp \
 		camshift.hpp \
-		recognize.hpp main.cpp \
+		recognize.hpp \
+		tldtracker.hpp main.cpp \
 		detect.cpp \
 		camshift.cpp \
-		recognize.cpp
+		recognize.cpp \
+		tldtracker.cpp
 QMAKE_TARGET  = fff
 DESTDIR       = #avoid trailing-slash linebreak
 TARGET        = fff
@@ -292,8 +296,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents detect.hpp camshift.hpp recognize.hpp $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp detect.cpp camshift.cpp recognize.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents detect.hpp camshift.hpp recognize.hpp tldtracker.hpp $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp detect.cpp camshift.cpp recognize.cpp tldtracker.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -346,6 +350,9 @@ camshift.o: camshift.cpp camshift.hpp
 recognize.o: recognize.cpp recognize.hpp \
 		detect.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o recognize.o recognize.cpp
+
+tldtracker.o: tldtracker.cpp tldtracker.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tldtracker.o tldtracker.cpp
 
 ####### Install
 

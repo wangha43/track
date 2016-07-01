@@ -13,7 +13,7 @@
 #include "detect.hpp"
 #include "camshift.hpp"
 #include "recognize.hpp"
-
+#include "tldtracker.hpp"
 extern "C"
 {
 #include "libavcodec/avcodec.h"
@@ -26,6 +26,7 @@ using namespace cv;
 vector<camshifttracker> camtracker;
 vector<KeyPoint> keyPoint_1;
 vector<Rect> rectang;
+vector<bool> recieved;
  bool tracker_sys=false;
  bool moving = false;
 Rect boundRect;
@@ -34,7 +35,7 @@ vector<int> count_time;
 
 detecter * dt = new detecter;
 recognizer * recogn = new recognizer;
-
+tldtracker * tldtracker_1 = new tldtracker;
 vector<Rect> trackedRect;
 vector<Rect> foundRect;
 bool firsttrack = true;
@@ -58,17 +59,23 @@ void track_it(Mat & s_frame){
         foundRect = dt->findarea(bgmask,tmp_frame);
     }
 
-      if(!firsttrack){
-         recogn->vesusmatch(mat_of_first,trackedRect,tmp_frame,foundRect,count_time);
-      }
+//      if(!firsttrack){
+//         recogn->vesusmatch(mat_of_first,trackedRect,tmp_frame,foundRect,count_time);
+//      }
       mat_of_first = tmp_frame;
       firsttrack = false;
-
+      Ptr<Tracker> track = tldtracker_1->getTracker();
       for(size_t i = camtracker.size();i<trackedRect.size();i++){
 //
-            camshifttracker ctracker;
-            ctracker.setCurrentRect(trackedRect[i]);
-          camtracker.push_back(ctracker);
+            if(recieved[i]==false){
+                track->init(s_frame,trackedRect[i]);
+                recieved[i]=true;
+            }else{
+                Rect2d roi =trackedRect[i];
+                trackedRect[i] = roi;
+                track->update(s_frame,roi);
+                rectangle(s_frame,roi,Scalar(255,0,0),2,1);
+            }
       }
 
 
@@ -163,7 +170,6 @@ int main(int argc, char *argv[])
                 waitkey=false;
             else
                 continue;
-
         }
 
         ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);

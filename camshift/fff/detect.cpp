@@ -33,7 +33,7 @@ vector<Rect> detecter::findarea(cv::Mat & a,Mat & gray){
     erode(temp, temp, element, Point(3,3), niters);
     dilate(temp, temp, element, Point(3,3), niters);
     threshold(temp, temp, 128, 255, CV_THRESH_BINARY);
-    imshow("temp",a);
+    
     findContours( temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
 
     for(size_t i= 0;i<contours.size();i++){
@@ -48,13 +48,13 @@ vector<Rect> detecter::findarea(cv::Mat & a,Mat & gray){
             continue;
         }else{
             for(size_t i = 0;i<found_body.size();i++){
-                Rect bod = Rect(found_body[i].x+are.x,found_body[i].y+are.y,found_body[i].width,found_body[i].height);
-                result.push_back(bod);
-//                rectangle(temp,bod,Scalar(255,255,255),5);
+               Rect bod = Rect(found_body[i].x+are.x,found_body[i].y+are.y,found_body[i].width,found_body[i].height);
+               result.push_back(bod);
+               rectangle(gray,bod,Scalar(255,255,255),5);
+               break;
             }
         }
-
     }
-
+    imshow("temp",gray);
     return result;
 }
