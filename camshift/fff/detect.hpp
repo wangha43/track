@@ -18,13 +18,14 @@
 #include <string>
 #include "opencv2/video/background_segm.hpp"
 #include "opencv2/objdetect/objdetect.hpp"
+#include "opencv2/objdetect.hpp"
 
 using namespace std;
 using namespace cv;
 class detecter{
 public :
     detecter();
-    vector<Rect> findarea(cv::Mat & a,Mat & gray);
+    vector<Rect> findarea(cv::Mat & a,Mat & gray,Mat & frame);
 //    Ptr<BackgroundSubtractorMOG2> getSubstractor();
     Ptr<BackgroundSubtractorMOG2> bgsubtractor;
     CascadeClassifier upperbody_detector;
