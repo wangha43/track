@@ -29,9 +29,9 @@ vector<Rect> detecter::findarea(cv::Mat & a,Mat & gray,Mat & frame){
     Mat element;
 
     element = getStructuringElement(MORPH_RECT, Size(9, 9), Point(-1, -1));
-    dilate(a, temp, element, Point(4,4), niters);
-    erode(temp, temp, element, Point(4,4), niters*1);
-    dilate(temp, temp, element, Point(4,4), niters*1);
+    dilate(a, temp, element, Point(3,3), niters);
+    erode(temp, temp, element, Point(3,3), niters*1);
+    dilate(temp, temp, element, Point(3,3), niters*1);
      imshow("temp",temp);
     threshold(temp, temp, 128, 255, CV_THRESH_BINARY);
     findContours( temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
@@ -76,7 +76,7 @@ vector<Rect> detecter::findarea(cv::Mat & a,Mat & gray,Mat & frame){
         Rect body_largest = Rect(body.x+boundrect.x,body.y+boundrect.y,body.width+boundrect.width,body.height+boundrect.height);
         Rect inter = body_largest & boundrect;
         if(inter.width*inter.height > 0){
-            result.push_back(boundrect);
+            result.push_back(inter);
         }
     }
     return result;
