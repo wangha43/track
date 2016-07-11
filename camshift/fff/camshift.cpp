@@ -60,6 +60,12 @@ cv::RotatedRect camshifttracker::trackCurrentRect()
 
     if( firstRun )
     {
+        if((selection.x)+(selection.width)>hue.cols){
+            selection.width = hue.cols - (int)selection.x;
+        }
+        if((int)(selection.y)+(selection.height)>hue.rows){
+            selection.height = hue.rows - selection.y;
+        }
         cv::Mat roi(hue, selection), maskroi(mask, selection);
         cv::calcHist(&roi, 1, 0, maskroi, hist, 1, &hsize, &phranges);
         cv::normalize(hist, hist, 0, 255, CV_MINMAX);

@@ -18,8 +18,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp detect.cpp camshift.cpp recognize.cpp \
-    tldtracker.cpp
+    tldtracker.cpp \
+    kalmanfilter.cpp
 
 HEADERS +=detect.hpp camshift.hpp recognize.hpp \
-    tldtracker.hpp
+    tldtracker.hpp \
+    kalmanfilter.h
 

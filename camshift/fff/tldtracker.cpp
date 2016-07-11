@@ -2,7 +2,7 @@
 
 tldtracker::tldtracker()
 {
-    tracker = Tracker::create("KCF");
+    tracker = Tracker::create("TLD");
 }
 
 Ptr<Tracker> tldtracker::getTracker(){

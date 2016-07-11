@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
         //            IplImage img = (IplImage)(frame);
         resize(frame,frame,Size(600,400));
         camshifttracker::setMainImage(frame);
-        system("echo hello");
+        system("");
         recogn->setThrehold(5);
         count_f++;
         if(count_f % 10==0){
