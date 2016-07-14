@@ -18,6 +18,7 @@
 #include "tldtracker.hpp"
 #include <opencv2/core/utility.hpp>
 #include "kalmanfilter.h"
+#include "kcftracker.hpp"
 #define DEBUG
 extern "C"
 {
@@ -56,6 +57,12 @@ Ptr<Tracker>  ptracker =Tracker::create("KCF");
 Mat s_frame,kframe,bgmask,back_frame,tmp_frame,mat_track;
 Ptr<BackgroundSubtractorMOG2> bgsubtractor = createBackgroundSubtractorMOG2();
 static Rect2d rec;
+    bool HOG = true;
+    bool FIXEDWINDOW = false;
+    bool MULTISCALE = true;
+//    bool SILENT = true;
+    bool LAB = false;
+KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
 
 void track_it(Mat  s_frame){
     cvtColor(s_frame,tmp_frame,COLOR_BGR2GRAY);
@@ -136,7 +143,6 @@ void track_it(Mat  s_frame){
     //        }
 
     if(tracking.width*tracking.height!=0){
-        Ptr<Tracker> tracker = tl->getTracker();
         if(firsttrack){
             if((tracking.x)+(tracking.width)>s_frame.cols){
                 tracking.width = s_frame.cols - tracking.x-1;
@@ -145,7 +151,7 @@ void track_it(Mat  s_frame){
                 tracking.height = s_frame.rows - tracking.y-1;
             }
 
-//            ptracker->init(s_frame,tracking);
+            tracker.init(tracking,s_frame);
             kf->init(tracking);
             firsttrack = false;
         }else{
@@ -157,10 +163,12 @@ void track_it(Mat  s_frame){
             }
 
 
-//            ptracker->update(s_frame,tracking);
+            Rect tra= tracker.update(s_frame);
+             rectangle(s_frame,tra,Scalar(255,255,0));
             if(track_forward.area()==0){
                  track_forward = tracking;
             }
+
 
             if(track_forward.area()!=0){
                 Rect rtest = (Rect)track_forward & (Rect)tracking;
@@ -171,11 +179,11 @@ void track_it(Mat  s_frame){
                     track_forward = tracking;
                 }
             }
-            rectangle(s_frame,tracking,Scalar(255,255,255));
-            putText(s_frame,"forward",Point(tracking.x,tracking.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(0,0,255));
-            Rect2d rec2 = kf->setcurrentrect(tracking);
-            rectangle(s_frame,tracking,Scalar(255,255,255));
-            putText(s_frame,"kalman",Point(rec2.x,rec2.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(255,0,0));
+//            rectangle(s_frame,tracking,Scalar(255,255,255));
+//            putText(s_frame,"forward",Point(tracking.x,tracking.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(0,0,255));
+//            Rect2d rec2 = kf->setcurrentrect(tracking);
+//            rectangle(s_frame,tracking,Scalar(255,255,255));
+//            putText(s_frame,"kalman",Point(rec2.x,rec2.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(255,0,0));
         }
     }
 

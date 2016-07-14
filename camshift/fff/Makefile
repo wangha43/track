@@ -53,13 +53,17 @@ SOURCES       = main.cpp \
 		camshift.cpp \
 		recognize.cpp \
 		tldtracker.cpp \
-		kalmanfilter.cpp 
+		kalmanfilter.cpp \
+		kcftracker.cpp \
+		fhog.cpp 
 OBJECTS       = main.o \
 		detect.o \
 		camshift.o \
 		recognize.o \
 		tldtracker.o \
-		kalmanfilter.o
+		kalmanfilter.o \
+		kcftracker.o \
+		fhog.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -123,12 +127,20 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		camshift.hpp \
 		recognize.hpp \
 		tldtracker.hpp \
-		kalmanfilter.h main.cpp \
+		kalmanfilter.h \
+		kcftracker.hpp \
+		fhog.hpp \
+		ffttools.hpp \
+		recttools.hpp \
+		labdata.hpp \
+		tracker.h main.cpp \
 		detect.cpp \
 		camshift.cpp \
 		recognize.cpp \
 		tldtracker.cpp \
-		kalmanfilter.cpp
+		kalmanfilter.cpp \
+		kcftracker.cpp \
+		fhog.cpp
 QMAKE_TARGET  = fff
 DESTDIR       = #avoid trailing-slash linebreak
 TARGET        = fff
@@ -300,8 +312,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents detect.hpp camshift.hpp recognize.hpp tldtracker.hpp kalmanfilter.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp detect.cpp camshift.cpp recognize.cpp tldtracker.cpp kalmanfilter.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents detect.hpp camshift.hpp recognize.hpp tldtracker.hpp kalmanfilter.h kcftracker.hpp fhog.hpp ffttools.hpp recttools.hpp labdata.hpp tracker.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp detect.cpp camshift.cpp recognize.cpp tldtracker.cpp kalmanfilter.cpp kcftracker.cpp fhog.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -344,7 +356,9 @@ main.o: main.cpp detect.hpp \
 		camshift.hpp \
 		recognize.hpp \
 		tldtracker.hpp \
-		kalmanfilter.h
+		kalmanfilter.h \
+		kcftracker.hpp \
+		tracker.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 detect.o: detect.cpp detect.hpp
@@ -362,6 +376,17 @@ tldtracker.o: tldtracker.cpp tldtracker.hpp
 
 kalmanfilter.o: kalmanfilter.cpp kalmanfilter.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o kalmanfilter.o kalmanfilter.cpp
+
+kcftracker.o: kcftracker.cpp kcftracker.hpp \
+		tracker.h \
+		ffttools.hpp \
+		recttools.hpp \
+		fhog.hpp \
+		labdata.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o kcftracker.o kcftracker.cpp
+
+fhog.o: fhog.cpp fhog.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o fhog.o fhog.cpp
 
 ####### Install
 

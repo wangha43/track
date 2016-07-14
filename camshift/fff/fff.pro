@@ -19,9 +19,17 @@ TEMPLATE = app
 
 SOURCES += main.cpp detect.cpp camshift.cpp recognize.cpp \
     tldtracker.cpp \
-    kalmanfilter.cpp
+    kalmanfilter.cpp \
+    kcftracker.cpp \
+    fhog.cpp
 
 HEADERS +=detect.hpp camshift.hpp recognize.hpp \
     tldtracker.hpp \
-    kalmanfilter.h
+    kalmanfilter.h \
+    kcftracker.hpp \
+    fhog.hpp \
+    ffttools.hpp \
+    recttools.hpp \
+    labdata.hpp \
+    tracker.h
 
