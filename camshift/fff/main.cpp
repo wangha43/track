@@ -17,7 +17,8 @@
 #include <opencv2/tracking.hpp>
 #include "tldtracker.hpp"
 #include <opencv2/core/utility.hpp>
-
+#include "kalmanfilter.h"
+#define DEBUG
 extern "C"
 {
 #include "libavcodec/avcodec.h"
@@ -33,7 +34,7 @@ vector<Rect> rectang;
 vector<bool> recieved;
 camshifttracker ctracker;
 
-Rect trackedtrace;
+
 size_t status=0;
 
 bool tracker_sys=false;
@@ -42,10 +43,12 @@ Rect boundRect;
 Mat mat_of_first;
 int count_time;
 bool tracked = false;
-
+Rect track_forward;
 detecter * dt = new detecter;
 recognizer * recogn = new recognizer;
 tldtracker * tl = new tldtracker;
+kalmanf *kf = new kalmanf;
+Rect2d tracking;
 vector<Rect> trackedRect;
 Rect foundRect;
 bool firsttrack = true;
@@ -53,8 +56,8 @@ Ptr<Tracker>  ptracker =Tracker::create("KCF");
 Mat s_frame,kframe,bgmask,back_frame,tmp_frame,mat_track;
 Ptr<BackgroundSubtractorMOG2> bgsubtractor = createBackgroundSubtractorMOG2();
 static Rect2d rec;
-void track_it(Mat  s_frame){
 
+void track_it(Mat  s_frame){
     cvtColor(s_frame,tmp_frame,COLOR_BGR2GRAY);
     blur(tmp_frame,kframe,Size(3,3),Point(-1,-1));
     Ptr<BackgroundSubtractorMOG2> bgsubtractor = dt->bgsubtractor;
@@ -63,39 +66,62 @@ void track_it(Mat  s_frame){
     imshow("bg",bgmask);
     //init find Rect
 
-    foundRect = dt->findarea(bgmask,tmp_frame,s_frame);
+    foundRect = dt->findarea(bgmask,tmp_frame,s_frame,tracking);
 
     //track with comparison
     if(tracked){
-        if(trackedtrace.width*trackedtrace.height < foundRect.width*foundRect.height){
-            trackedtrace=foundRect;
+        if(tracking.width*tracking.height < foundRect.width*foundRect.height){
+            tracking=foundRect;
             mat_track = s_frame;
             firsttrack = true;
             tracked = true;
         }
     }
+
+#ifdef DEBUG
     cout<<"tracked:"<<tracked<<endl;
+#endif
+
     // track the founded
-    if(trackedtrace.width*trackedtrace.height == 0 && foundRect.width*foundRect.height!=0){
-        trackedtrace=foundRect;
+    if(tracking.width*tracking.height == 0 && foundRect.width*foundRect.height!=0){
+        tracking=foundRect;
         mat_track = s_frame;
         firsttrack = true;
         tracked = true;
     }
 
-    //            if(!firsttrack){
-    //               recogn->vesusmatch(mat_of_first,trackedRect,tmp_frame,foundRect,count_time);
-    //            }
+    //                if(!firsttrack){
+    //                   recogn->vesusmatch(mat_of_first,trackedRect,tmp_frame,foundRect,count_time);
+    //                }
 
 
-    //        if(trackedRect.size()!=0){
-    //            ctracker.setMainImage(s_frame);
-    //            ctracker.setCurrentRect(trackedRect[0]);
-    //            Rect rect_track = ctracker.trackCurrentRect().boundingRect();
-    //            if(rect_track.x>0 && rect_track.y >0 && rect_track.width*rect_track.height > 9){
-    //                //                  if(!firsttrack){
-    //                //                      recogn->vesusmatch(mat_track,trackedRect[0],s_frame,rect_track,count_time);
-    //                //                  }
+    //    if(tracking.width*tracking.height!=0){
+    //        ctracker.setMainImage(s_frame);
+    //        ctracker.setCurrentRect(tracking);
+    //        Rect2d rect_track = ctracker.trackCurrentRect().boundingRect();
+    //        if(rect_track.x>0 && rect_track.y >0 && rect_track.width*rect_track.height > 9){
+    //            if(firsttrack){
+    //                if((rect_track.x)+(rect_track.width)>s_frame.cols){
+    //                    rect_track.width = s_frame.cols - rect_track.x-1;
+    //                }
+    //                if((rect_track.y)+(rect_track.height)>s_frame.rows){
+    //                    rect_track.height = s_frame.rows - rect_track.y-1;
+    //                }
+
+    //                ptracker->init(s_frame,tracking);
+    //                kf->init(rect_track);
+    //                firsttrack = false;
+    //            }else{
+    //                    if((rect_track.x)+(rect_track.width)>s_frame.cols){
+    //                        rect_track.width = s_frame.cols - rect_track.x-1;
+    //                    }
+    //                    if((rect_track.y)+(rect_track.height)>s_frame.rows){
+    //                        rect_track.height = s_frame.rows - rect_track.y-1;
+    //                    }
+    //                       Rect2d rec2 = kf->setcurrentrect(rect_track);
+    //                    ptracker->update(s_frame,tracking);
+    //                      rectangle(s_frame,rec2,Scalar(255,255,255));
+    //                }
     //            }
 
     //            //               Rect2d rect_track = trackedRect[0];
@@ -109,34 +135,52 @@ void track_it(Mat  s_frame){
     //            //              }
     //        }
 
-    if(trackedtrace.width*trackedtrace.height!=0){
-//        Ptr<Tracker> tracker = tl->getTracker();
+    if(tracking.width*tracking.height!=0){
+        Ptr<Tracker> tracker = tl->getTracker();
         if(firsttrack){
+            if((tracking.x)+(tracking.width)>s_frame.cols){
+                tracking.width = s_frame.cols - tracking.x-1;
+            }
+            if((tracking.y)+(tracking.height)>s_frame.rows){
+                tracking.height = s_frame.rows - tracking.y-1;
+            }
 
-            if((trackedtrace.x)+(trackedtrace.width)>s_frame.cols){
-                trackedtrace.width = s_frame.cols - trackedtrace.x-1;
-            }
-            if((trackedtrace.y)+(trackedtrace.height)>s_frame.rows){
-                trackedtrace.height = s_frame.rows - trackedtrace.y-1;
-            }
-            Rect2d rec = trackedtrace;
-            ptracker->init(s_frame,rec);
+//            ptracker->init(s_frame,tracking);
+            kf->init(tracking);
             firsttrack = false;
         }else{
-            if((trackedtrace.x)+(trackedtrace.width)>s_frame.cols){
-                trackedtrace.width = s_frame.cols - trackedtrace.x-1;
+            if((tracking.x)+(tracking.width)>s_frame.cols){
+                tracking.width = s_frame.cols - tracking.x-1;
             }
-            if((trackedtrace.y)+(trackedtrace.height)>s_frame.rows){
-                trackedtrace.height = s_frame.rows - trackedtrace.y-1;
+            if((tracking.y)+(tracking.height)>s_frame.rows){
+                tracking.height = s_frame.rows - tracking.y-1;
             }
-            Rect2d rec = trackedtrace;
-            ptracker->update(s_frame,rec);
-            rectangle(s_frame,rec,Scalar(255,255,255));
+
+
+//            ptracker->update(s_frame,tracking);
+            if(track_forward.area()==0){
+                 track_forward = tracking;
+            }
+
+            if(track_forward.area()!=0){
+                Rect rtest = (Rect)track_forward & (Rect)tracking;
+                //object keep still
+                if(rtest.area()/tracking.area() > 0.98){
+                    tracking = track_forward;
+                }else{
+                    track_forward = tracking;
+                }
+            }
+            rectangle(s_frame,tracking,Scalar(255,255,255));
+            putText(s_frame,"forward",Point(tracking.x,tracking.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(0,0,255));
+            Rect2d rec2 = kf->setcurrentrect(tracking);
+            rectangle(s_frame,tracking,Scalar(255,255,255));
+            putText(s_frame,"kalman",Point(rec2.x,rec2.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(255,0,0));
         }
     }
 
     if(count_time > 0 && count_time > 15){
-        trackedtrace = Rect(0,0,0,0);
+        tracking = Rect(0,0,0,0);
         tracked = false;
     }
 
@@ -193,21 +237,25 @@ int main(int argc, char *argv[])
     AVFrame *pFrame;
 
     pCodec = avcodec_find_decoder(codec_id);
+
     if (!pCodec) {
         qDebug("Codec not found");
         return -1;
     }
     pCodecCtx = avcodec_alloc_context3(pCodec);
+
     if (!pCodecCtx){
         qDebug("Could not allocate video codec context");
         return -1;
     }
 
     pCodecParserCtx=av_parser_init(codec_id);
+
     if (!pCodecParserCtx){
         qDebug("Could not allocate video parser context");
         return -1;
     }
+
     if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
         qDebug("Could not open codec");
         return -1;
@@ -259,10 +307,10 @@ int main(int argc, char *argv[])
         //            IplImage img = (IplImage)(frame);
         resize(frame,frame,Size(600,400));
         camshifttracker::setMainImage(frame);
-        system("echo hello");
+        system("");
         recogn->setThrehold(5);
         count_f++;
-        if(count_f % 10==0){
+        if(count_f % 5==0){
             QDateTime dateTime_1 = QDateTime::currentDateTime();
 
             track_it(frame.clone());

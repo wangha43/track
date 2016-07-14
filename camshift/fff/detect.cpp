@@ -20,7 +20,7 @@ detecter::detecter(){
 //    return bgsubtractor;
 //}
 
-Rect detecter::findarea(cv::Mat & a,Mat & gray,Mat & frame){
+Rect detecter::findarea(cv::Mat & a,Mat & gray,Mat & frame,Rect2d & tracking){
     Rect result;
     int niters = 3;
     vector<vector<Point> > contours;
@@ -31,7 +31,7 @@ Rect detecter::findarea(cv::Mat & a,Mat & gray,Mat & frame){
     element = getStructuringElement(MORPH_RECT, Size(9, 9), Point(-1, -1));
     dilate(a, temp, element, Point(3,3), niters);
     erode(temp, temp, element, Point(3,3), niters*1);
-    dilate(temp, temp, element, Point(3,3), niters*1);
+//    dilate(temp, temp, element, Point(3,3), niters*1);
     imshow("temp",temp);
     threshold(temp, temp, 128, 255, CV_THRESH_BINARY);
     findContours( temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
@@ -67,6 +67,14 @@ Rect detecter::findarea(cv::Mat & a,Mat & gray,Mat & frame){
             }
             //            rectangle(gray,found_body[largest_body_index],Scalar(255,255,255));
         }
+
+        if(tracking.width*tracking.height>0){
+           Rect2d rc = (Rect2d)boundingRect(contours[largest_index]);
+            Rect2d c = tracking & rc;
+            if(c.width*c.height/tracking.width*tracking.height > 0.7 || c.width*c.height/rc.width*rc.height >0.7){
+                tracking = boundingRect(contours[largest_index]);
+            }
+        }
     }
 
     if(contours.size()!=0 && found_body.size()!=0){
@@ -74,7 +82,7 @@ Rect detecter::findarea(cv::Mat & a,Mat & gray,Mat & frame){
         //get the most largest contour
         Rect body = found_body[largest_body_index];
         Rect body_largest = Rect(body.x+boundrect.x,body.y+boundrect.y,body.width+boundrect.width,body.height+boundrect.height);
-        Rect inter = Rect(body_largest.x+ceil(body.width*0.1),body_largest.y+ceil(boundrect.height*0.1),ceil(body.width*0.8),ceil(boundrect.height*0.8));
+        Rect inter = Rect(body_largest.x,body_largest.y,body.width,boundrect.height);
 
         if(inter.width*inter.height > 0){
             result=inter;

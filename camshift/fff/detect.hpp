@@ -25,7 +25,7 @@ using namespace cv;
 class detecter{
 public :
     detecter();
-    Rect findarea(cv::Mat & a,Mat & gray,Mat & frame);
+    Rect findarea(cv::Mat & a,Mat & gray,Mat & frame,Rect2d & traking);
 //    Ptr<BackgroundSubtractorMOG2> getSubstractor();
     Ptr<BackgroundSubtractorMOG2> bgsubtractor;
     CascadeClassifier upperbody_detector;

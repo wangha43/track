@@ -1,5 +1,5 @@
-#ifndef KALMANFILTER_H
-#define KALMANFILTER_H
+#ifndef KALMANF_H
+#define KALMANF_H
 #include <opencv2/core.hpp>
 #include <iostream>
 #include <opencv2/highgui/highgui.hpp>
@@ -8,20 +8,21 @@
 using namespace std;
 using namespace cv;
 
-class kalmanfilter
+class kalmanf
 {
 public:
-    kalmanfilter();
-    Rect kalmanfilter::setcurrentrect(Rect & ub);
-    void kalmanfilter::init(Rect & ub);
+    kalmanf();
+    ~kalmanf();
+    Rect setcurrentrect(Rect2d & ub);
+    //init with a rect
+    void init(Rect ub);
     Point getcurrent();
 private:
     KalmanFilter km;
     Mat_<float> measurement;
-    Mat measurement;
     RNG rng;
     Point kfpredict;
     Point kmCorrectCenter;
 };
 
-#endif // KALMANFILTER_H
+#endif

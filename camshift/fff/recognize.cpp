@@ -71,5 +71,4 @@ void recognizer::vesusmatch(Mat & mat1,vector<int> & count_time,detecter * de){
             count_time.push_back(0);
         }
         cout<<found_body.size()<<endl;
-
 }
