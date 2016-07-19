@@ -82,7 +82,7 @@ Rect detecter::findarea(cv::Mat & a,Mat & gray,Mat & frame,Rect2d & tracking){
         //get the most largest contour
         Rect body = found_body[largest_body_index];
         Rect body_largest = Rect(body.x+boundrect.x,body.y+boundrect.y,body.width+boundrect.width,body.height+boundrect.height);
-        Rect inter = Rect(body_largest.x,body_largest.y,body.width,boundrect.height);
+        Rect inter = Rect(body_largest.x,body_largest.y,boundrect.width,boundrect.height);
 
         if(inter.width*inter.height > 0){
             result=inter;

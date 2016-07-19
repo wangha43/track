@@ -45,6 +45,7 @@ Mat mat_of_first;
 int count_time;
 bool tracked = false;
 Rect track_forward;
+Mat tracked_forward;//last time recorded mat
 detecter * dt = new detecter;
 recognizer * recogn = new recognizer;
 tldtracker * tl = new tldtracker;
@@ -53,7 +54,7 @@ Rect2d tracking;
 vector<Rect> trackedRect;
 Rect foundRect;
 bool firsttrack = true;
-Ptr<Tracker>  ptracker =Tracker::create("KCF");
+Ptr<Tracker>  ptracker =Tracker::create("TLD");
 Mat s_frame,kframe,bgmask,back_frame,tmp_frame,mat_track;
 Ptr<BackgroundSubtractorMOG2> bgsubtractor = createBackgroundSubtractorMOG2();
 static Rect2d rec;
@@ -95,7 +96,7 @@ void track_it(Mat  s_frame){
         mat_track = s_frame;
         firsttrack = true;
         tracked = true;
-    }
+}
 
     //                if(!firsttrack){
     //                   recogn->vesusmatch(mat_of_first,trackedRect,tmp_frame,foundRect,count_time);
@@ -151,7 +152,8 @@ void track_it(Mat  s_frame){
                 tracking.height = s_frame.rows - tracking.y-1;
             }
 
-            tracker.init(tracking,s_frame);
+//            tracker.init(tracking,s_frame);
+//            ptracker->init(s_frame,tracking);
             kf->init(tracking);
             firsttrack = false;
         }else{
@@ -163,27 +165,28 @@ void track_it(Mat  s_frame){
             }
 
 
-            Rect tra= tracker.update(s_frame);
-             rectangle(s_frame,tra,Scalar(255,255,0));
+//            Rect tra= tracker.update(s_frame);
+//             rectangle(s_frame,tra,Scalar(255,255,0));
             if(track_forward.area()==0){
                  track_forward = tracking;
+                 tracked_forward = Mat(s_frame,track_forward);
             }
+
 
 
             if(track_forward.area()!=0){
-                Rect rtest = (Rect)track_forward & (Rect)tracking;
                 //object keep still
-                if(rtest.area()/tracking.area() > 0.98){
-                    tracking = track_forward;
-                }else{
-                    track_forward = tracking;
-                }
+            Mat diff = Mat(tracked_forward,track_forward) != Mat(s_frame,track_forward);
+            if(countNonZero(diff) ==0){
+                tracking = track_forward;
             }
+            }
+//            ptracker->update(s_frame,tracking);
 //            rectangle(s_frame,tracking,Scalar(255,255,255));
 //            putText(s_frame,"forward",Point(tracking.x,tracking.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(0,0,255));
-//            Rect2d rec2 = kf->setcurrentrect(tracking);
-//            rectangle(s_frame,tracking,Scalar(255,255,255));
-//            putText(s_frame,"kalman",Point(rec2.x,rec2.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(255,0,0));
+            Rect2d rec2 = kf->setcurrentrect(tracking);
+            rectangle(s_frame,tracking,Scalar(255,255,255));
+            putText(s_frame,"kalman",Point(rec2.x,rec2.y),CV_FONT_HERSHEY_COMPLEX,0.5,Scalar(255,0,0));
         }
     }
 
@@ -201,9 +204,9 @@ void track_it(Mat  s_frame){
     imshow("video",s_frame);
 }
 
-int main(int argc, char *argv[])
+int main()
 {
-    QApplication a(argc, argv);
+//    QApplication a(argc, argv);
     qDebug("av init");
     av_register_all();
     avformat_network_init();
@@ -313,7 +316,7 @@ int main(int argc, char *argv[])
         cv::cvtColor(frame,frame,CV_YUV2BGR_I420);
 
         //            IplImage img = (IplImage)(frame);
-        resize(frame,frame,Size(600,400));
+        resize(frame,frame,Size(450,300));
         camshifttracker::setMainImage(frame);
         system("");
         recogn->setThrehold(5);
@@ -336,8 +339,6 @@ int main(int argc, char *argv[])
         //            waitKey(500);
         //            qDebug("got video");
     }
-
     av_free_packet(packet);
-
-    return a.exec();
+    return 0;
 }
